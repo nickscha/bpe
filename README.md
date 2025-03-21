@@ -21,13 +21,12 @@ int main() {
     bpe model = {0};
     model.text = input;
     model.text_length = BPE_STRLEN(input);
-    model.replacement_symbol = (char)65; /* Start from an arbitrary unused symbol */
 
     /* Run until there are no more replacements. Alternativly you can limit it by fixed iteration loop */
     while (bpe_forward(&model))
     {
         /*
-          Intermmediate Access
+          Intermediate Access
 
           model.most_frequent_pair_count
           model.most_frequent_pair

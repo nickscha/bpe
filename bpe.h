@@ -55,26 +55,37 @@ typedef struct bpe
 
   char replacement_symbol;
 
+  unsigned int iteration_count;
+
 } bpe;
 
-#define BPE_MAX_SYMBOLS 65536 /* two chars 256 * 256 chars */
+#define BPE_MAX_SYMBOLS 65536 /* two chars combined 256 * 256 chars */
 
 BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
 {
   unsigned int count[BPE_MAX_SYMBOLS] = {0};
+  unsigned char used_chars[256] = {0}; /* Track characters used in text to determine the replacement_symbol*/
   unsigned int i;
   unsigned short j;
 
   /* Count the frequency of each pair of characters */
   for (i = 0; i < model->text_length; i += 2)
   {
+    unsigned char a = (unsigned char)model->text[i];
+    unsigned char b;
+
+    used_chars[a] = 1;
+
     /* For uneven buffer_size we cannot build a pair for the last one */
     if (i + 1 >= model->text_length)
     {
       break;
     }
 
-    count[bpe_convert_pair_to_id((unsigned char)model->text[i], (unsigned char)model->text[i + 1])]++;
+    b = (unsigned char)model->text[i + 1];
+    used_chars[b] = 1;
+
+    count[bpe_convert_pair_to_id(a, b)]++;
   }
 
   /* Find the most frequent pair */
@@ -86,6 +97,16 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
     {
       model->most_frequent_pair_count = count[j];
       model->most_frequent_pair = j;
+    }
+  }
+
+  /* Find an unused character to use as a replacement */
+  for (j = 128; j < 255; ++j)
+  {
+    if (!used_chars[j])
+    {
+      model->replacement_symbol = (char)j;
+      break;
     }
   }
 }
@@ -115,18 +136,13 @@ BPE_API BPE_INLINE void bpe_replace_pair(bpe *model)
     }
   }
 
-  if (replacements > 0)
-  {
-    model->replacement_symbol++;
-  }
-
   model->text[j] = '\0';
   model->text_length -= replacements;
 }
 
 BPE_API BPE_INLINE bpe_bool bpe_forward(bpe *model)
 {
-  /* Find most frequent pair*/
+  /* (1) Find most frequent pair*/
   bpe_most_frequent_pair(model);
 
   if (model->most_frequent_pair_count <= 1)
@@ -134,8 +150,10 @@ BPE_API BPE_INLINE bpe_bool bpe_forward(bpe *model)
     return (0);
   }
 
-  /* Replace the pair with a new symbol */
+  /* (2) Replace the pair with a new symbol */
   bpe_replace_pair(model);
+
+  model->iteration_count++;
 
   return (1);
 }

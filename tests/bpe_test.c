@@ -21,7 +21,6 @@ bpe bpe_test_process(char txt[], unsigned int txtLength)
   bpe model = {0};
   model.text = txt;
   model.text_length = txtLength;
-  model.replacement_symbol = (char)65; /* Start from an arbitrary unused symbol */
 
   printf("[bpe]   text_in: %s (%i)\n", txtLength > 40 ? redacted_msg : model.text, model.text_length);
 
@@ -73,11 +72,12 @@ void bpe_test_long_text(void)
   finalModel = bpe_test_process(input, BPE_STRLEN(input));
 
   assert(finalModel.most_frequent_pair_count == 1);
-  assert(finalModel.text_length == 229);
+  assert(finalModel.text_length == 243);
 }
 
 int main(void)
 {
+
   bpe_test_simple_even();
   bpe_test_simple_uneven();
   bpe_test_simple_even_multicompress();
