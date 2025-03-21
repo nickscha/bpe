@@ -46,9 +46,25 @@ void bpe_test_simple_even(void)
   assert(finalModel.text_length == 2);
 }
 
+void bpe_test_simple_even_upper(void)
+{
+  char input[] = "ABABABAB";
+  bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
+  assert(finalModel.most_frequent_pair_count == 1);
+  assert(finalModel.text_length == 2);
+}
+
 void bpe_test_simple_uneven(void)
 {
   char input[] = "ababababr";
+  bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
+  assert(finalModel.most_frequent_pair_count == 1);
+  assert(finalModel.text_length == 3);
+}
+
+void bpe_test_simple_uneven_upper(void)
+{
+  char input[] = "ABABABABr";
   bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
   assert(finalModel.most_frequent_pair_count == 1);
   assert(finalModel.text_length == 3);
@@ -60,6 +76,30 @@ void bpe_test_simple_even_multicompress(void)
   bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
   assert(finalModel.most_frequent_pair_count == 1);
   assert(finalModel.text_length == 5);
+}
+
+void bpe_test_simple_numbers(void)
+{
+  char input[] = "01010202333333";
+  bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
+  assert(finalModel.most_frequent_pair_count == 1);
+  assert(finalModel.text_length == 7);
+
+  printf("encoded: %s\n", finalModel.text);
+
+  bpe_decode(&finalModel);
+
+  printf("decoded: %s\n", finalModel.text);
+
+  assert(finalModel.text_length == 14);
+}
+
+void bpe_test_simple_special_characters(void)
+{
+  char input[] = "$&(){}\\\\(){}()\\\\a$&$&";
+  bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
+  assert(finalModel.most_frequent_pair_count == 1);
+  assert(finalModel.text_length == 11);
 }
 
 void bpe_test_long_text(void)
@@ -91,14 +131,40 @@ void bpe_test_decode(void)
   assert(finalModel.text_length == 8);
 }
 
+void bpe_test_decode_long_text(void)
+{
+  char input[] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.";
+  bpe finalModel;
+
+  assert(BPE_STRLEN(input) == 508);
+
+  finalModel = bpe_test_process(input, BPE_STRLEN(input));
+
+  assert(finalModel.most_frequent_pair_count == 1);
+  assert(finalModel.text_length == 243);
+
+  printf("encoded: %s\n", finalModel.text);
+
+  bpe_decode(&finalModel);
+
+  printf("decoded: %s\n", finalModel.text);
+
+  assert(finalModel.text_length == 508);
+}
+
 int main(void)
 {
 
   bpe_test_simple_even();
+  bpe_test_simple_even_upper();
   bpe_test_simple_uneven();
+  bpe_test_simple_uneven_upper();
   bpe_test_simple_even_multicompress();
+  bpe_test_simple_numbers();
+  bpe_test_simple_special_characters();
   bpe_test_long_text();
   bpe_test_decode();
+  bpe_test_decode_long_text();
 
   return 0;
 }
