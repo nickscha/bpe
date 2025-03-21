@@ -33,6 +33,8 @@ int main() {
           model.text
           model.text_length
           model.replacement_symbol
+          model.iteration_count
+          
         */
     }
 

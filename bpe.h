@@ -52,7 +52,6 @@ typedef struct bpe
 
   unsigned short most_frequent_pair;
   unsigned int most_frequent_pair_count;
-
   char replacement_symbol;
 
   unsigned int iteration_count;
@@ -71,10 +70,8 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
   /* Count the frequency of each pair of characters */
   for (i = 0; i < model->text_length; i += 2)
   {
-    unsigned char a = (unsigned char)model->text[i];
+    unsigned char a;
     unsigned char b;
-
-    used_chars[a] = 1;
 
     /* For uneven buffer_size we cannot build a pair for the last one */
     if (i + 1 >= model->text_length)
@@ -82,7 +79,10 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
       break;
     }
 
+    a = (unsigned char)model->text[i];
     b = (unsigned char)model->text[i + 1];
+
+    used_chars[a] = 1;
     used_chars[b] = 1;
 
     count[bpe_convert_pair_to_id(a, b)]++;
@@ -121,6 +121,7 @@ BPE_API BPE_INLINE void bpe_replace_pair(bpe *model)
   {
     unsigned char first;
     unsigned char second;
+
     bpe_convert_id_to_pair(model->most_frequent_pair, &first, &second);
 
     /* If we find the pair, replace it with the new symbol */
