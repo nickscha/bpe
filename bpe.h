@@ -45,9 +45,12 @@ BPE_API BPE_INLINE void bpe_convert_id_to_pair(unsigned short key, unsigned char
   *b = (unsigned char)(key & 0xFF);
 }
 
-#define BPE_MAX_SYMBOLS 65536     /* two chars combined 256 * 256 chars */
-#define BPE_MAX_REPLACEMENTS 1024 /* Support up to 1024 replacements */
+#define BPE_MAX_SYMBOLS 65536 /* two chars combined 256 * 256 chars */
 #define BPE_NUM_CHARS 256
+
+#ifndef BPE_MAX_ITERATIONS
+#define BPE_MAX_ITERATIONS 1024 /* Support up to 1024 replacements */
+#endif
 
 typedef struct bpe
 {
@@ -60,7 +63,8 @@ typedef struct bpe
   unsigned int most_frequent_pair_count;
 
   unsigned char replacement_symbol;
-  unsigned short replacement_table[BPE_MAX_REPLACEMENTS]; /* Maps new symbols to original pairs */
+  unsigned char replacement_symbols[BPE_MAX_ITERATIONS];
+  unsigned short replacement_pairs[BPE_MAX_ITERATIONS]; /* Maps new symbols to original pairs */
 
   unsigned int iteration_count;
 
@@ -112,15 +116,18 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
     if (!used_chars[j])
     {
       model->replacement_symbol = (unsigned char)j;
+      model->replacement_symbols[model->iteration_count] = model->replacement_symbol;
+      model->replacement_pairs[model->iteration_count] = model->most_frequent_pair;
       return;
     }
   }
 
   /* If no unused character is found, assign a new extended symbol */
-  if (model->iteration_count < BPE_MAX_REPLACEMENTS)
+  if (model->iteration_count < BPE_MAX_ITERATIONS)
   {
     model->replacement_symbol = (unsigned char)(256 + model->iteration_count);
-    model->replacement_table[model->iteration_count] = model->most_frequent_pair;
+    model->replacement_symbols[model->iteration_count] = model->replacement_symbol;
+    model->replacement_pairs[model->iteration_count] = model->most_frequent_pair;
   }
   else
   {
@@ -145,7 +152,7 @@ BPE_API BPE_INLINE void bpe_replace_pair(bpe *model)
     /* If we find the pair, replace it with the new symbol */
     if (model->text[i] == (char)first && model->text[i + 1] == (char)second)
     {
-      model->text[j++] = (char) model->replacement_symbol;
+      model->text[j++] = (char)model->replacement_symbol;
       i += 2;
       replacements++;
     }
@@ -175,6 +182,49 @@ BPE_API BPE_INLINE bpe_bool bpe_forward(bpe *model)
   model->iteration_count++;
 
   return (1);
+}
+
+BPE_API BPE_INLINE void bpe_decode(bpe *model)
+{
+  int i, j, k;
+  char temp[BPE_MAX_SYMBOLS]; /* Buffer to hold expanding text */
+
+  /* Start with the compressed text */
+  unsigned int text_length = model->text_length;
+
+  /* Process replacements in reverse order */
+  for (i = (int)(model->iteration_count - 1); i >= 0; i--)
+  {
+    unsigned short replacement_pair = model->replacement_pairs[i]; /* Retrieve original pair */
+    unsigned char replacement_symbol = model->replacement_symbols[i];
+    unsigned char first, second;
+    bpe_convert_id_to_pair(replacement_pair, &first, &second);
+
+    j = 0;
+    for (k = 0; k < (int)text_length; k++)
+    {
+      if ((unsigned char)model->text[k] == replacement_symbol)
+      {
+        /* Replace with the original pair */
+        temp[j++] = (char)first;
+        temp[j++] = (char)second;
+      }
+      else
+      {
+        temp[j++] = model->text[k];
+      }
+    }
+
+    /* Copy back expanded text */
+    text_length = (unsigned int)j;
+    for (j = 0; j < (int)text_length; j++)
+    {
+      model->text[j] = temp[j];
+    }
+    model->text[text_length] = '\0';
+  }
+
+  model->text_length = text_length;
 }
 
 #endif /* BPE_H */

@@ -75,6 +75,20 @@ void bpe_test_long_text(void)
   assert(finalModel.text_length == 243);
 }
 
+void bpe_test_decode(void)
+{
+  char input[] = "abababab";
+  bpe finalModel = bpe_test_process(input, BPE_STRLEN(input));
+  assert(finalModel.most_frequent_pair_count == 1);
+  assert(finalModel.text_length == 2);
+
+  bpe_decode(&finalModel);
+
+  printf("decoded: %s\n", finalModel.text);
+
+  assert(finalModel.text_length == 8);
+}
+
 int main(void)
 {
 
@@ -82,6 +96,7 @@ int main(void)
   bpe_test_simple_uneven();
   bpe_test_simple_even_multicompress();
   bpe_test_long_text();
+  bpe_test_decode();
 
   return 0;
 }
