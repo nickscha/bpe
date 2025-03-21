@@ -22,7 +22,9 @@ int main() {
     model.text = input;
     model.text_length = BPE_STRLEN(input);
 
-    /* Run until there are no more replacements. Alternativly you can limit it by fixed iteration loop */
+    /* Run until there are no more replacements. 
+       Alternativly you can limit it by fixed iteration loop 
+    */
     while (bpe_forward(&model))
     {
         /*
@@ -38,8 +40,13 @@ int main() {
         */
     }
 
-    /* Final text*/
-    printf("compressed text: %s\n", model.text);
+    /* Final encoded text*/
+    printf("encoded text: %s\n", model.text);
+
+    bpe_decode(&model);
+
+    /* Decode back */
+    printf("decoded text: %s\n", model.text);
 
     return 0;
 }
