@@ -62,11 +62,11 @@ typedef struct bpe
   unsigned short most_frequent_pair;
   unsigned int most_frequent_pair_count;
 
-  unsigned char replacement_symbol;
-  unsigned char replacement_symbols[BPE_MAX_ITERATIONS];
-  unsigned short replacement_pairs[BPE_MAX_ITERATIONS]; /* Maps new symbols to original pairs */
-
   unsigned int iteration_count;
+
+  unsigned char replacement_symbol;
+  unsigned char replacement_symbols[BPE_MAX_ITERATIONS]; /* DECODE: which replacement symbol has been used in the iteration*/
+  unsigned short replacement_pairs[BPE_MAX_ITERATIONS];  /* DECODE: which replacement pair has been used in the iteration*/
 
 } bpe;
 
@@ -76,6 +76,7 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
   unsigned char used_chars[BPE_NUM_CHARS] = {0}; /* Track characters used in text to determine the replacement_symbol*/
   unsigned int i;
   unsigned short j;
+  unsigned char replacement_symbol = 0;
 
   /* Count the frequency of each pair of characters */
   for (i = 0; i < model->text_length; i += 2)
@@ -115,18 +116,20 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
   {
     if (!used_chars[j])
     {
-      model->replacement_symbol = (unsigned char)j;
-      model->replacement_symbols[model->iteration_count] = model->replacement_symbol;
-      model->replacement_pairs[model->iteration_count] = model->most_frequent_pair;
-      return;
+      replacement_symbol = (unsigned char)j;
     }
   }
 
   /* If no unused character is found, assign a new extended symbol */
+  if (replacement_symbol == 0)
+  {
+    replacement_symbol = (unsigned char)(256 + model->iteration_count);
+  }
+
   if (model->iteration_count < BPE_MAX_ITERATIONS)
   {
-    model->replacement_symbol = (unsigned char)(256 + model->iteration_count);
-    model->replacement_symbols[model->iteration_count] = model->replacement_symbol;
+    model->replacement_symbol = replacement_symbol;
+    model->replacement_symbols[model->iteration_count] = replacement_symbol;
     model->replacement_pairs[model->iteration_count] = model->most_frequent_pair;
   }
   else

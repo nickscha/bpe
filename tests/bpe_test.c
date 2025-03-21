@@ -82,6 +82,8 @@ void bpe_test_decode(void)
   assert(finalModel.most_frequent_pair_count == 1);
   assert(finalModel.text_length == 2);
 
+  printf("encoded: %s\n", finalModel.text);
+
   bpe_decode(&finalModel);
 
   printf("decoded: %s\n", finalModel.text);
