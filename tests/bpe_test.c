@@ -11,7 +11,7 @@ LICENSE
 #include "../bpe.h"
 #include "test.h" /* Simple testing framework */
 
-static const char *redacted_msg = "... (to much to display)";
+static const char *redacted_msg = "... (too much to display)";
 
 bpe bpe_test_process(char txt[], unsigned int txtLength)
 {
