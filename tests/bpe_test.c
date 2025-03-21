@@ -15,9 +15,6 @@ static const char *redacted_msg = "... (too much to display)";
 
 bpe bpe_test_process(char txt[], unsigned int txtLength)
 {
-
-  int iteration = 0;
-
   bpe model = {0};
   model.text = txt;
   model.text_length = txtLength;
@@ -29,8 +26,7 @@ bpe bpe_test_process(char txt[], unsigned int txtLength)
     unsigned char first, second;
     bpe_convert_id_to_pair(model.most_frequent_pair, &first, &second);
 
-    printf("[bpe] [%2d] text: %s (%i) (most_frequent: '%c%c', occured: %d, replace_with: '%c')\n", iteration, txtLength > 40 ? redacted_msg : model.text, model.text_length, first, second, model.most_frequent_pair_count, model.replacement_symbol);
-    iteration++;
+    printf("[bpe] [%2d] text: %s (%i) (most_frequent: '%c%c', occured: %d, replace_with: '%c')\n", model.iteration_count, txtLength > 40 ? redacted_msg : model.text, model.text_length, first, second, model.most_frequent_pair_count, model.replacement_symbol);
   }
 
   printf("[bpe]  text_out: %s (%i)\n", txtLength > 40 ? redacted_msg : model.text, model.text_length);
