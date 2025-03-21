@@ -45,25 +45,31 @@ BPE_API BPE_INLINE void bpe_convert_id_to_pair(unsigned short key, unsigned char
   *b = (unsigned char)(key & 0xFF);
 }
 
+#define BPE_MAX_SYMBOLS 65536     /* two chars combined 256 * 256 chars */
+#define BPE_MAX_REPLACEMENTS 1024 /* Support up to 1024 replacements */
+#define BPE_NUM_CHARS 256
+
 typedef struct bpe
 {
+  /* Provided by the user */
   char *text;
   unsigned int text_length;
 
+  /* Provided by the library */
   unsigned short most_frequent_pair;
   unsigned int most_frequent_pair_count;
-  char replacement_symbol;
+
+  unsigned char replacement_symbol;
+  unsigned short replacement_table[BPE_MAX_REPLACEMENTS]; /* Maps new symbols to original pairs */
 
   unsigned int iteration_count;
 
 } bpe;
 
-#define BPE_MAX_SYMBOLS 65536 /* two chars combined 256 * 256 chars */
-
 BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
 {
   unsigned int count[BPE_MAX_SYMBOLS] = {0};
-  unsigned char used_chars[256] = {0}; /* Track characters used in text to determine the replacement_symbol*/
+  unsigned char used_chars[BPE_NUM_CHARS] = {0}; /* Track characters used in text to determine the replacement_symbol*/
   unsigned int i;
   unsigned short j;
 
@@ -105,9 +111,21 @@ BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
   {
     if (!used_chars[j])
     {
-      model->replacement_symbol = (char)j;
-      break;
+      model->replacement_symbol = (unsigned char)j;
+      return;
     }
+  }
+
+  /* If no unused character is found, assign a new extended symbol */
+  if (model->iteration_count < BPE_MAX_REPLACEMENTS)
+  {
+    model->replacement_symbol = (unsigned char)(256 + model->iteration_count);
+    model->replacement_table[model->iteration_count] = model->most_frequent_pair;
+  }
+  else
+  {
+    /* If we run out of replacement space, we stop further encoding */
+    model->most_frequent_pair_count = 0;
   }
 }
 
@@ -127,7 +145,7 @@ BPE_API BPE_INLINE void bpe_replace_pair(bpe *model)
     /* If we find the pair, replace it with the new symbol */
     if (model->text[i] == (char)first && model->text[i + 1] == (char)second)
     {
-      model->text[j++] = model->replacement_symbol;
+      model->text[j++] = (char) model->replacement_symbol;
       i += 2;
       replacements++;
     }
