@@ -1,7 +1,7 @@
 # bpe (in development)
 A C89 standard compliant, single header, nostdlib (no C Standard Library) byte pair encoding without any dynamic memory allocation.
 
-#### What is binary pair encoding:
+#### What is byte pair encoding:
 https://en.wikipedia.org/wiki/Byte_pair_encoding
 
 For more information please look at the "bpe.h" file or take a look at the "examples" or "tests" folder.
