@@ -70,6 +70,74 @@ typedef struct bpe
 
 } bpe;
 
+BPE_API BPE_INLINE int bpe_unicode_to_utf8(unsigned long unicode, unsigned char *utf8)
+{
+  if (unicode <= 0x7F)
+  {
+    utf8[0] = (unsigned char)unicode;
+    return (1);
+  }
+  else if (unicode <= 0x7FF)
+  {
+    utf8[0] = (unsigned char)(0xC0 | (unicode >> 6));
+    utf8[1] = (unsigned char)(0x80 | (unicode & 0x3F));
+    return (2);
+  }
+  else if (unicode <= 0xFFFF)
+  {
+    utf8[0] = (unsigned char)(0xE0 | (unicode >> 12));
+    utf8[1] = (unsigned char)(0x80 | ((unicode >> 6) & 0x3F));
+    utf8[2] = (unsigned char)(0x80 | (unicode & 0x3F));
+    return (3);
+  }
+  else if (unicode <= 0x10FFFF)
+  {
+    utf8[0] = (unsigned char)(0xF0 | (unicode >> 18));
+    utf8[1] = (unsigned char)(0x80 | ((unicode >> 12) & 0x3F));
+    utf8[2] = (unsigned char)(0x80 | ((unicode >> 6) & 0x3F));
+    utf8[3] = (unsigned char)(0x80 | (unicode & 0x3F));
+    return (4);
+  }
+  /* Invalid codepoint */
+  return (0);
+}
+
+BPE_API BPE_INLINE unsigned long bpe_utf8_to_unicode(const unsigned char *utf8, int *length)
+{
+  unsigned long unicode = 0;
+  *length = 0;
+
+  if ((utf8[0] & 0x80) == 0x00)
+  {
+    unicode = (unsigned long)utf8[0];
+    *length = 1;
+  }
+  else if ((utf8[0] & 0xE0) == 0xC0)
+  {
+    unicode = ((unsigned long)(utf8[0] & 0x1F) << 6) | ((unsigned long)utf8[1] & 0x3F);
+    *length = 2;
+  }
+  else if ((utf8[0] & 0xF0) == 0xE0)
+  {
+    unicode = ((unsigned long)(utf8[0] & 0x0F) << 12) | ((unsigned long)(utf8[1] & 0x3F) << 6) | ((unsigned long)utf8[2] & 0x3F);
+    *length = 3;
+  }
+  else if ((utf8[0] & 0xF8) == 0xF0)
+  {
+    unicode = ((unsigned long)(utf8[0] & 0x07) << 18) | ((unsigned long)(utf8[1] & 0x3F) << 12) |
+              ((unsigned long)(utf8[2] & 0x3F) << 6) | ((unsigned long)utf8[3] & 0x3F);
+    *length = 4;
+  }
+  else
+  {
+    /* Invalid UTF-8 */
+    *length = 0;
+    return (0);
+  }
+
+  return unicode;
+}
+
 BPE_API BPE_INLINE void bpe_most_frequent_pair(bpe *model)
 {
   unsigned int count[BPE_MAX_SYMBOLS] = {0};

@@ -148,6 +148,50 @@ void bpe_test_decode_long_text(void)
   assert(finalModel.text_length == 508);
 }
 
+void bpe_test_unicode_to_utf8(void)
+{
+  int i;
+  int length;
+
+  unsigned char utf8[4];           /* UTF-8 can be up to 4 bytes */
+  unsigned long unicode = 0x1F600; /* 😀 (Unicode U+1F600) */
+
+  length = bpe_unicode_to_utf8(unicode, utf8);
+
+  assert(length == 4);
+  assert(utf8[0] == 0xF0);
+  assert(utf8[1] == 0x9F);
+  assert(utf8[2] == 0x98);
+  assert(utf8[3] == 0x80);
+
+  printf("UTF-8 Encoding: ");
+  for (i = 0; i < length; ++i)
+  {
+    printf("%02X ", utf8[i]);
+  }
+  printf("\n");
+}
+
+void bpe_test_utf8_to_unicode(void)
+{
+  int length;
+  unsigned char utf8[] = {0xF0, 0x9F, 0x98, 0x80}; /* UTF-8 encoding of 😀 (U+1F600) */
+
+  unsigned long unicode = bpe_utf8_to_unicode(utf8, &length);
+
+  assert(length == 4);
+  assert(unicode == 128512);
+
+  if (length > 0)
+  {
+    printf("Decoded Unicode: U+%lX\n", unicode);
+  }
+  else
+  {
+    printf("Invalid UTF-8 sequence.\n");
+  }
+}
+
 int main(void)
 {
 
@@ -161,6 +205,8 @@ int main(void)
   bpe_test_long_text();
   bpe_test_decode();
   bpe_test_decode_long_text();
+  bpe_test_unicode_to_utf8();
+  bpe_test_utf8_to_unicode();
 
   return 0;
 }
