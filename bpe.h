@@ -70,7 +70,7 @@ typedef struct bpe
 
 } bpe;
 
-BPE_API BPE_INLINE int bpe_unicode_to_utf8(unsigned long unicode, unsigned char *utf8)
+BPE_API BPE_INLINE int bpe_convert_unicode_to_utf8(unsigned long unicode, unsigned char *utf8)
 {
   if (unicode <= 0x7F)
   {
@@ -102,7 +102,7 @@ BPE_API BPE_INLINE int bpe_unicode_to_utf8(unsigned long unicode, unsigned char 
   return (0);
 }
 
-BPE_API BPE_INLINE unsigned long bpe_utf8_to_unicode(const unsigned char *utf8, int *length)
+BPE_API BPE_INLINE unsigned long bpe_convert_utf8_to_unicode(const unsigned char *utf8, int *length)
 {
   unsigned long unicode = 0;
   *length = 0;

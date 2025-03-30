@@ -156,7 +156,7 @@ void bpe_test_unicode_to_utf8(void)
   unsigned char utf8[4];           /* UTF-8 can be up to 4 bytes */
   unsigned long unicode = 0x1F600; /* 😀 (Unicode U+1F600) */
 
-  length = bpe_unicode_to_utf8(unicode, utf8);
+  length = bpe_convert_unicode_to_utf8(unicode, utf8);
 
   assert(length == 4);
   assert(utf8[0] == 0xF0);
@@ -177,7 +177,7 @@ void bpe_test_utf8_to_unicode(void)
   int length;
   unsigned char utf8[] = {0xF0, 0x9F, 0x98, 0x80}; /* UTF-8 encoding of 😀 (U+1F600) */
 
-  unsigned long unicode = bpe_utf8_to_unicode(utf8, &length);
+  unsigned long unicode = bpe_convert_utf8_to_unicode(utf8, &length);
 
   assert(length == 4);
   assert(unicode == 128512);
