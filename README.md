@@ -13,8 +13,6 @@ Download or clone bpe.h and include it in your project.
 ```C
 #include "bpe.h"
 
-#include "stdio.h" /* Only needed here for demonstrational printf */
-
 int main() {
 
     char input[] = "abababab";
@@ -42,12 +40,12 @@ int main() {
     }
 
     /* Final encoded text*/
-    printf("encoded text: %s\n", model.text);
+    model.text;
 
     bpe_decode(&model);
 
-    /* Decode back */
-    printf("decoded text: %s\n", model.text);
+    /* Decoded text */
+    model.text;
 
     return 0;
 }
